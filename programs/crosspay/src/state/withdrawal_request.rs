@@ -2,16 +2,16 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct WithdrawalRequest {
-    pub freelancer: Pubkey,                  // 32
-    pub amount: u64,                         // 8
-    pub mint: Pubkey,                        // 32
-    pub payout_method: PayoutMethod,         // 1 + 1
-    pub selected_provider: Option<Pubkey>,   // 1 + 32
-    pub status: WithdrawalStatus,            // 1 + 1
-    pub created_at: i64,                     // 8
-    pub completed_at: Option<i64>,           // 1 + 8
-    pub nonce: u64,                          // 8
-    pub bump: u8,                            // 1
+    pub freelancer: Pubkey,                // 32
+    pub amount: u64,                       // 8
+    pub mint: Pubkey,                      // 32
+    pub payout_method: PayoutMethod,       // 1 + 1
+    pub selected_provider: Option<Pubkey>, // 1 + 32
+    pub status: WithdrawalStatus,          // 1 + 1
+    pub created_at: i64,                   // 8
+    pub completed_at: Option<i64>,         // 1 + 8
+    pub nonce: u64,                        // 8
+    pub bump: u8,                          // 1
 }
 
 impl WithdrawalRequest {

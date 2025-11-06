@@ -2,15 +2,15 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct TransferRequest {
-    pub sender: Pubkey,              // 32
-    pub receiver: Pubkey,            // 32
-    pub amount: u64,                 // 8
-    pub mint: Pubkey,                // 32 (stablecoin mint address)
-    pub status: TransferStatus,      // 1 + 1
-    pub created_at: i64,             // 8
-    pub completed_at: Option<i64>,   // 1 + 8
-    pub nonce: u64,                  // 8
-    pub bump: u8,                    // 1
+    pub sender: Pubkey,            // 32
+    pub receiver: Pubkey,          // 32
+    pub amount: u64,               // 8
+    pub mint: Pubkey,              // 32 (stablecoin mint address)
+    pub status: TransferStatus,    // 1 + 1
+    pub created_at: i64,           // 8
+    pub completed_at: Option<i64>, // 1 + 8
+    pub nonce: u64,                // 8
+    pub bump: u8,                  // 1
 }
 
 impl TransferRequest {

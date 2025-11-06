@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
+
+use crate::errors::CrossPayError;
 use crate::state::*;
-use crate::errors::*;
 
 /// Context for selecting a liquidity provider
 #[derive(Accounts)]
@@ -31,10 +32,7 @@ pub struct SelectProvider<'info> {
 }
 
 /// Select a liquidity provider for the withdrawal
-pub fn select_provider(
-    ctx: Context<SelectProvider>,
-    provider_key: Pubkey,
-) -> Result<()> {
+pub fn select_provider(ctx: Context<SelectProvider>, provider_key: Pubkey) -> Result<()> {
     let withdrawal_request = &mut ctx.accounts.withdrawal_request;
 
     require!(

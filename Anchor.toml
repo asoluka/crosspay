@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-crosspay = "98HrtmBbC1RfgEaJF9ba6xfw4yPpArDDV2MqNAG8mC3E"
+crosspay = "4fy5wximsVYsVYwLp5VrgjqfUq8NyEXG1nisKuwkS8Vq"
 
 [registry]
 url = "https://api.apr.dev"

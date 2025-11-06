@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{self, TokenAccount, TokenInterface, TransferChecked, transfer_checked};
+use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+
+use crate::errors::CrossPayError;
 use crate::state::*;
-use crate::errors::*;
-use crate::instructions::*;
 
 /// Context for confirming and executing a transfer
 #[derive(Accounts)]
@@ -40,16 +40,14 @@ pub struct ConfirmTransfer<'info> {
         constraint = sender_token_account.owner == authority.key(),
         constraint = sender_token_account.mint == transfer_request.mint
     )]
-    pub sender_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub sender_token_account: Account<'info, TokenAccount>,
 
     #[account(
         mut,
         constraint = receiver_token_account.owner == transfer_request.receiver,
         constraint = receiver_token_account.mint == transfer_request.mint
     )]
-    pub receiver_token_account: InterfaceAccount<'info, TokenAccount>,
-
-    pub mint: InterfaceAccount<'info, anchor_spl::token_interface::Mint>,
+    pub receiver_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: Validated via seeds in sender_profile
     pub sender: UncheckedAccount<'info>,
@@ -57,7 +55,7 @@ pub struct ConfirmTransfer<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    pub token_program: Interface<'info, TokenInterface>,
+    pub token_program: Program<'info, Token>,
 }
 
 /// Confirm and execute the transfer
@@ -65,18 +63,17 @@ pub fn confirm_transfer(ctx: Context<ConfirmTransfer>) -> Result<()> {
     let transfer_request = &mut ctx.accounts.transfer_request;
     let clock = Clock::get()?;
 
-    // Transfer tokens via CPI using transfer_checked
-    let cpi_accounts = TransferChecked {
+    // Transfer tokens via CPI
+    let cpi_accounts = Transfer {
         from: ctx.accounts.sender_token_account.to_account_info(),
         to: ctx.accounts.receiver_token_account.to_account_info(),
         authority: ctx.accounts.authority.to_account_info(),
-        mint: ctx.accounts.mint.to_account_info(),
     };
 
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-    transfer_checked(cpi_ctx, transfer_request.amount, ctx.accounts.mint.decimals)?;
+    token::transfer(cpi_ctx, transfer_request.amount)?;
 
     // Update transfer status
     transfer_request.status = TransferStatus::Completed;

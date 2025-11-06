@@ -1,7 +1,7 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{TokenAccount, Mint, TokenInterface};
+use crate::errors::CrossPayError;
 use crate::state::*;
-use crate::errors::*;
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 /// Context for initiating a transfer
 #[derive(Accounts)]
@@ -30,9 +30,9 @@ pub struct InitiateTransfer<'info> {
     pub transfer_request: Account<'info, TransferRequest>,
 
     #[account(mut)]
-    pub sender_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub sender_token_account: Account<'info, TokenAccount>,
 
-    pub mint: InterfaceAccount<'info, Mint>,
+    pub mint: Account<'info, Mint>,
 
     /// CHECK: Receiver pubkey - validation done in instruction
     pub receiver: UncheckedAccount<'info>,
@@ -44,7 +44,7 @@ pub struct InitiateTransfer<'info> {
     pub authority: Signer<'info>,
 
     pub system_program: Program<'info, System>,
-    pub token_program: Interface<'info, TokenInterface>,
+    pub token_program: Program<'info, Token>,
 }
 
 /// Initiate a transfer from sender to receiver

@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
-use crate::state::*;
-use crate::errors::CrossPayError;
+
 use crate::constants::*;
+use crate::errors::CrossPayError;
+use crate::state::*;
 
 /// Context for registering a new liquidity provider
 #[derive(Accounts)]
@@ -27,7 +28,10 @@ pub fn register_liquidity_provider(
     location: String,
     exchange_rate: u64,
 ) -> Result<()> {
-    require!(location.len() <= MAX_LOCATION_LEN, CrossPayError::InvalidLocation);
+    require!(
+        location.len() <= MAX_LOCATION_LEN,
+        CrossPayError::InvalidLocation
+    );
     require!(exchange_rate > 0, CrossPayError::InvalidAmount);
 
     let liquidity_provider = &mut ctx.accounts.liquidity_provider;
@@ -44,7 +48,10 @@ pub fn register_liquidity_provider(
     liquidity_provider.created_at = clock.unix_timestamp;
     liquidity_provider.bump = ctx.bumps.liquidity_provider;
 
-    msg!("Liquidity provider registered: {}", ctx.accounts.authority.key());
+    msg!(
+        "Liquidity provider registered: {}",
+        ctx.accounts.authority.key()
+    );
 
     Ok(())
 }

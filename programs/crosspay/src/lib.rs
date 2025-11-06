@@ -2,12 +2,13 @@ use anchor_lang::prelude::*;
 
 pub mod constants;
 pub mod errors;
-pub mod state;
 pub mod instructions;
+pub mod state;
 
 use instructions::*;
+use state::{PayoutMethod, UserRole};
 
-declare_id!("98HrtmBbC1RfgEaJF9ba6xfw4yPpArDDV2MqNAG8mC3E");
+declare_id!("4fy5wximsVYsVYwLp5VrgjqfUq8NyEXG1nisKuwkS8Vq");
 
 #[program]
 pub mod crosspay {
@@ -16,7 +17,7 @@ pub mod crosspay {
     /// Initialize a user profile (sender or receiver)
     pub fn initialize_user(
         ctx: Context<InitializeUser>,
-        role: state::UserRole,
+        role: UserRole,
         country_code: String,
     ) -> Result<()> {
         instructions::initialize_user(ctx, role, country_code)
@@ -67,16 +68,13 @@ pub mod crosspay {
     pub fn request_withdrawal(
         ctx: Context<RequestWithdrawal>,
         amount: u64,
-        payout_method: state::PayoutMethod,
+        payout_method: PayoutMethod,
     ) -> Result<()> {
         instructions::request_withdrawal(ctx, amount, payout_method)
     }
 
     /// Select a liquidity provider for withdrawal
-    pub fn select_provider(
-        ctx: Context<SelectProvider>,
-        provider_key: Pubkey,
-    ) -> Result<()> {
+    pub fn select_provider(ctx: Context<SelectProvider>, provider_key: Pubkey) -> Result<()> {
         instructions::select_provider(ctx, provider_key)
     }
 

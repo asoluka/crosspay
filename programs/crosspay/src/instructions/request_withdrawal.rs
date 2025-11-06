@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{TokenAccount, TokenInterface};
-use crate::state::*;
+use anchor_spl::token::{Token, TokenAccount};
+
 use crate::errors::CrossPayError;
+use crate::state::*;
 
 /// Context for requesting a withdrawal
 #[derive(Accounts)]
@@ -32,7 +33,7 @@ pub struct RequestWithdrawal<'info> {
         constraint = freelancer_token_account.owner == authority.key(),
         constraint = freelancer_token_account.amount >= amount @ CrossPayError::InsufficientBalance
     )]
-    pub freelancer_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub freelancer_token_account: Account<'info, TokenAccount>,
 
     /// CHECK: Freelancer pubkey - used for PDA derivation
     pub freelancer: UncheckedAccount<'info>,
@@ -41,7 +42,7 @@ pub struct RequestWithdrawal<'info> {
     pub authority: Signer<'info>,
 
     pub system_program: Program<'info, System>,
-    pub token_program: Interface<'info, TokenInterface>,
+    pub token_program: Program<'info, Token>,
 }
 
 /// Request a withdrawal to local currency

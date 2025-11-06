@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{self, TokenAccount, TokenInterface, TransferChecked, transfer_checked};
-use crate::state::*;
+use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+
 use crate::errors::CrossPayError;
+use crate::state::*;
 
 /// Context for finalizing a withdrawal
 #[derive(Accounts)]
@@ -35,23 +36,21 @@ pub struct FinalizeWithdrawal<'info> {
         constraint = freelancer_token_account.owner == freelancer.key(),
         constraint = freelancer_token_account.mint == withdrawal_request.mint
     )]
-    pub freelancer_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub freelancer_token_account: Account<'info, TokenAccount>,
 
     #[account(
         mut,
         constraint = provider_token_account.owner == provider_authority.key(),
         constraint = provider_token_account.mint == withdrawal_request.mint
     )]
-    pub provider_token_account: InterfaceAccount<'info, TokenAccount>,
-
-    pub mint: InterfaceAccount<'info, anchor_spl::token_interface::Mint>,
+    pub provider_token_account: Account<'info, TokenAccount>,
 
     pub freelancer: Signer<'info>,
 
     #[account(mut)]
     pub provider_authority: Signer<'info>,
 
-    pub token_program: Interface<'info, TokenInterface>,
+    pub token_program: Program<'info, Token>,
 }
 
 /// Finalize the withdrawal after fiat is received
@@ -60,18 +59,17 @@ pub fn finalize_withdrawal(ctx: Context<FinalizeWithdrawal>) -> Result<()> {
     let liquidity_provider = &mut ctx.accounts.liquidity_provider;
     let clock = Clock::get()?;
 
-    // Transfer tokens from freelancer to liquidity provider via CPI using transfer_checked
-    let cpi_accounts = TransferChecked {
+    // Transfer tokens from freelancer to liquidity provider via CPI
+    let cpi_accounts = Transfer {
         from: ctx.accounts.freelancer_token_account.to_account_info(),
         to: ctx.accounts.provider_token_account.to_account_info(),
         authority: ctx.accounts.freelancer.to_account_info(),
-        mint: ctx.accounts.mint.to_account_info(),
     };
 
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-    transfer_checked(cpi_ctx, withdrawal_request.amount, ctx.accounts.mint.decimals)?;
+    token::transfer(cpi_ctx, withdrawal_request.amount)?;
 
     // Update withdrawal status
     withdrawal_request.status = WithdrawalStatus::Completed;

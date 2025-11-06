@@ -1,7 +1,6 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount, Mint};
+use crate::errors::CrossPayError;
 use crate::state::*;
-use crate::errors::*;
+use anchor_lang::prelude::*;
 
 /// Context for initializing a new user profile
 #[derive(Accounts)]
@@ -42,7 +41,10 @@ pub fn initialize_user(
     user_profile.total_received = 0;
     user_profile.bump = ctx.bumps.user_profile;
 
-    msg!("User profile initialized for: {}", ctx.accounts.authority.key());
+    msg!(
+        "User profile initialized for: {}",
+        ctx.accounts.authority.key()
+    );
 
     Ok(())
 }
