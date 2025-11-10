@@ -2,6 +2,7 @@ use crate::errors::CrossPayError;
 use crate::state::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+use crate::constants::{calculate_net_amount, calculate_platform_fee};
 
 /// Context for initiating a transfer
 #[derive(Accounts)]
@@ -62,9 +63,15 @@ pub fn initiate_transfer(
     let transfer_request = &mut ctx.accounts.transfer_request;
     let clock = Clock::get()?;
 
+    // Calculate fee and net amount
+    let platform_fee = calculate_platform_fee(amount);
+    let net_amount = calculate_net_amount(amount);
+    
     transfer_request.sender = ctx.accounts.sender.key();
     transfer_request.receiver = receiver;
-    transfer_request.amount = amount;
+    transfer_request.amount = amount;           // Gross amount
+    transfer_request.net_amount = net_amount;   // Amount receiver gets
+    transfer_request.platform_fee = platform_fee;
     transfer_request.mint = ctx.accounts.mint.key();
     transfer_request.status = TransferStatus::Pending;
     transfer_request.created_at = clock.unix_timestamp;

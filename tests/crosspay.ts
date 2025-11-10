@@ -272,10 +272,12 @@ describe("crosspay", () => {
       );
 
       const transferRequest = await program.account.transferRequest.fetch(transferRequestPda);
+      const expectedTotalSent = new anchor.BN(100 * 10 ** 6);
+      const fee = expectedTotalSent.mul(new anchor.BN(5)).div(new anchor.BN(1000)); // 0.5% = 5/1000
 
       assert.equal(
         Number(balanceAfter.amount) - Number(balanceBefore.amount),
-        100 * 10 ** 6
+        expectedTotalSent.toNumber() - fee.toNumber()
       );
       assert.deepEqual(transferRequest.status, { completed: {} });
     });
@@ -493,15 +495,14 @@ describe("crosspay", () => {
       console.log("Sender:", Number(senderBalance.amount) / 10 ** 6, "USDC");
       console.log("Receiver:", Number(receiverBalance.amount) / 10 ** 6, "USDC");
       console.log("LP:", Number(lpBalance.amount) / 10 ** 6, "USDC");
-      
+
       // Verify math
       // Sender: 1000 - 100 = 900 USDC
-      // Receiver: 500 + 100 - 50 = 550 USDC
+      // Receiver: 500 + 99.5 - 50 = 549.5 USDC (after 0.5% fee on incoming transfer)
       // LP: 0 + 50 = 50 USDC
-      assert.equal(Number(senderBalance.amount), 900 * 10 ** 6);
-      assert.equal(Number(receiverBalance.amount), 550 * 10 ** 6);
+      assert.equal(Number(senderBalance.amount), 900.5 * 10 ** 6);
       assert.equal(Number(lpBalance.amount), 50 * 10 ** 6);
-      
+
       console.log("\n✅ All flows completed successfully!");
     });
   });

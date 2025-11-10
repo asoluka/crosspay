@@ -73,7 +73,7 @@ pub fn confirm_transfer(ctx: Context<ConfirmTransfer>) -> Result<()> {
     let cpi_program = ctx.accounts.token_program.to_account_info();
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-    token::transfer(cpi_ctx, transfer_request.amount)?;
+    token::transfer(cpi_ctx, transfer_request.net_amount)?;
 
     // Update transfer status
     transfer_request.status = TransferStatus::Completed;
@@ -81,7 +81,7 @@ pub fn confirm_transfer(ctx: Context<ConfirmTransfer>) -> Result<()> {
 
     // Update user profiles
     ctx.accounts.sender_profile.total_sent += transfer_request.amount;
-    ctx.accounts.receiver_profile.total_received += transfer_request.amount;
+    ctx.accounts.receiver_profile.total_received += transfer_request.net_amount;
 
     msg!("Transfer completed: {} tokens", transfer_request.amount);
 
