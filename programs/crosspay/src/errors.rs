@@ -40,4 +40,11 @@ pub enum CrossPayError {
 
     #[msg("Invalid location string - maximum 50 characters allowed")]
     InvalidLocation, // 6012
+    
+    #[msg("Invalid fee calculation")]
+    InvalidFeeCalculation,
+    
+    #[msg("Arithmetic overflow")]
+    ArithmeticOverflow,
+
 }

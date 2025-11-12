@@ -1,3 +1,5 @@
+use anchor_lang::prelude::*;
+
 // ========================================
 // PDA SEEDS
 // ========================================
@@ -46,6 +48,9 @@ pub const MAX_LOCATION_LEN: usize = 50;
 /// Platform fee in basis points (0.5% = 50 basis points)
 /// 1 basis point = 0.01%
 pub const PLATFORM_FEE_BPS: u16 = 50;
+
+/// Platform fee recipient pubkey (your treasury address)
+pub const PLATFORM_FEE_RECIPIENT: Pubkey = pubkey!("3NPHMMM5dNde1ZV8VPkFQrd2TEPH6n9WTyPt3AyvfxdD");
 
 /// Fee divisor for basis points calculation
 /// To calculate fee: (amount * fee_bps) / BASIS_POINTS_DIVISOR
