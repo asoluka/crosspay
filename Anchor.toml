@@ -8,11 +8,14 @@ skip-lint = false
 [programs.localnet]
 crosspay = "4fy5wximsVYsVYwLp5VrgjqfUq8NyEXG1nisKuwkS8Vq"
 
+[programs.devnet]
+crosspay = "4fy5wximsVYsVYwLp5VrgjqfUq8NyEXG1nisKuwkS8Vq"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet" # switch as required e.g., devnet
 wallet = "~/.config/solana/id.json"
 
 [scripts]

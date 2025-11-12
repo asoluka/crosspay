@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Crosspay } from "../target/types/crosspay";
-import { PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
+import { PublicKey, Keypair, SystemProgram, sendAndConfirmTransaction, Transaction } from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
   createMint,
@@ -35,23 +35,63 @@ describe("crosspay", () => {
     liquidityProvider = Keypair.generate();
     mintAuthority = Keypair.generate();
 
-    // Airdrop SOL to test accounts
-    const airdropAmount = 5 * anchor.web3.LAMPORTS_PER_SOL;
+    // Transfer SOL from local wallet to test accounts
+    const transferAmount = 1 * anchor.web3.LAMPORTS_PER_SOL;
     
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(sender.publicKey, airdropAmount)
+    // Transfer to sender
+    const senderTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: provider.wallet.publicKey,
+        toPubkey: sender.publicKey,
+        lamports: transferAmount,
+      })
+    );
+    await sendAndConfirmTransaction(
+      provider.connection,
+      senderTx,
+      [provider.wallet.payer]
     );
     
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(receiver.publicKey, airdropAmount)
+    // Transfer to receiver
+    const receiverTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: provider.wallet.publicKey,
+        toPubkey: receiver.publicKey,
+        lamports: transferAmount,
+      })
+    );
+    await sendAndConfirmTransaction(
+      provider.connection,
+      receiverTx,
+      [provider.wallet.payer]
     );
     
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(liquidityProvider.publicKey, airdropAmount)
+    // Transfer to LP
+    const lpTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: provider.wallet.publicKey,
+        toPubkey: liquidityProvider.publicKey,
+        lamports: transferAmount,
+      })
+    );
+    await sendAndConfirmTransaction(
+      provider.connection,
+      lpTx,
+      [provider.wallet.payer]
     );
     
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(mintAuthority.publicKey, airdropAmount)
+    // Transfer to mint authority
+    const mintAuthorityTx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: provider.wallet.publicKey,
+        toPubkey: mintAuthority.publicKey,
+        lamports: transferAmount,
+      })
+    );
+    await sendAndConfirmTransaction(
+      provider.connection,
+      mintAuthorityTx,
+      [provider.wallet.payer]
     );
 
     // Create USDC mock mint (using standard Token Program)
@@ -110,6 +150,48 @@ describe("crosspay", () => {
     console.log("Receiver:", receiver.publicKey.toString());
     console.log("LP:", liquidityProvider.publicKey.toString());
     console.log("USDC Mint:", usdcMint.toString());
+  });
+
+  after(async () => {
+    // Return remaining SOL from test accounts back to local wallet
+    const accounts = [
+      { keypair: sender, name: "Sender" },
+      { keypair: receiver, name: "Receiver" },
+      { keypair: liquidityProvider, name: "LP" },
+      { keypair: mintAuthority, name: "MintAuthority" },
+    ];
+
+    for (const account of accounts) {
+      try {
+        const balance = await provider.connection.getBalance(account.keypair.publicKey);
+        // Keep minimum rent-exempt balance (890880 lamports for empty account)
+        // Plus extra buffer for the transfer transaction fee
+        const minBalance = 890880 + 10000; // ~0.0009 SOL
+        const returnAmount = balance - minBalance;
+        
+        if (returnAmount > 0) {
+          const returnTx = new Transaction().add(
+            SystemProgram.transfer({
+              fromPubkey: account.keypair.publicKey,
+              toPubkey: provider.wallet.publicKey,
+              lamports: returnAmount,
+            })
+          );
+          await sendAndConfirmTransaction(
+            provider.connection,
+            returnTx,
+            [account.keypair]
+          );
+          console.log(`✅ Returned ${returnAmount / anchor.web3.LAMPORTS_PER_SOL} SOL from ${account.name}`);
+        } else {
+          console.log(`⚠️  ${account.name} has insufficient balance to return (${balance / anchor.web3.LAMPORTS_PER_SOL} SOL)`);
+        }
+      } catch (error) {
+        console.log(`⚠️  Could not return SOL from ${account.name}:`, error.message);
+      }
+    }
+    
+    console.log("\n💰 All SOL returned to local wallet!");
   });
 
   describe("User Management", () => {
